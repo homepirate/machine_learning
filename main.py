@@ -1,33 +1,41 @@
-import cv2
-import os
-from tensorflow import keras
 import numpy as np
+import os
+import cv2
+import pickle
 
-CATEGORIES = ['Cat', 'Dog']
 
-def image(path):
-    img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-    if img is None:
-        print('Wrong path:', path)
+DIR = '/home/evgeniy/PycharmProjects/machine_learning/data'
+CATEGORIES = ['men', 'women']
+
+data = []
+
+for category in CATEGORIES:
+  path = os.path.join(DIR, category)
+  for img in os.listdir(path):
+    img_path = os.path.join(path, img)
+    label = CATEGORIES.index(category)
+    print(img_path)
+    arr = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+    if arr is None:
+      print('Wrong path:', path)
     else:
-        new_arr = cv2.resize(img, (60, 60))
-        new_arr = np.array(new_arr)
-        new_arr = new_arr.reshape(-1, 60, 60, 1)
-        return new_arr
+      new_arr = cv2.resize(arr, (60, 60))
+      data.append([new_arr, label])
 
 
-def main():
-    model = keras.models.load_model('cat-vs-dog.model')
-    imgs = os.listdir("catdog")
-    print(len(imgs))
-    for img in imgs:
-        if img.endswith(('.jpg', '.png', 'jpeg')):
-            prediction = model.predict([image(f"catdog/{img}")])
-            print(f"Image {img} is the {CATEGORIES[prediction.argmax()]}")
+import random
+random.shuffle(data)
+
+X = []
+y = []
+
+for features, label in data:
+  X.append(features)
+  y.append(label)
+
+X = np.array(X)
+y = np.array(y)
 
 
-
-if __name__ == '__main__':
-    main()
-
-
+pickle.dump(X, open('X.pkl', 'wb'))
+pickle.dump(y, open('y.pkl', 'wb'))
